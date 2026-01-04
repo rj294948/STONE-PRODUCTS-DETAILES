@@ -3,180 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <title>Stone Products Details</title>
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f4f6f8;
-  padding:20px;
-}
-
-h2 { margin-bottom:10px; }
-
-button {
-  padding:8px 14px;
-  margin:6px 6px 12px 0;
-  cursor:pointer;
-}
-
-table {
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-}
-
-th, td {
-  border:1px solid #ccc;
-  padding:6px;
-  text-align:center;
-}
-
-th {
-  background:#2c3e50;
-  color:#fff;
-  position:sticky;
-  top:0;
-}
-
-input {
-  width:100%;
-  border:none;
-  padding:4px;
-  outline:none;
-}
-
-img {
-  width:60px;
-  height:60px;
-  object-fit:cover;
-  cursor:pointer;
-  border:1px solid #ddd;
-}
+body{font-family:Arial; background:#f4f6f8; padding:20px;}
+h2{margin-bottom:10px;}
+button{padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer;}
+table{width:100%; border-collapse:collapse; background:#fff;}
+th, td{border:1px solid #ccc; padding:6px; text-align:center;}
+th{background:#2c3e50; color:#fff; position:sticky; top:0;}
+input{width:100%; border:none; padding:4px; outline:none;}
+img{width:60px; height:60px; object-fit:cover; cursor:pointer; border:1px solid #ddd;}
 </style>
 </head>
-
 <body>
 
 <h2>Stone Products Details</h2>
-
 <button onclick="loadImages()">📂 Load Images From Drive</button>
 <button onclick="saveAll()">💾 Save All to Google Sheet</button>
 
 <table id="tbl">
 <thead>
 <tr>
-<th>SR</th>
-<th>IMAGE</th>
-<th>STONE NAME</th>
-<th>USES</th>
-<th>USES TYPES</th>
-<th>SURFACE TYPE</th>
-<th>THICKNESS</th>
-<th>SIZE TYPE</th>
-<th>UNITS TYPE</th>
+<th>SR</th><th>IMAGE</th><th>STONE NAME</th><th>USES</th><th>USES TYPES</th>
+<th>SURFACE TYPE</th><th>THICKNESS</th><th>SIZE TYPE</th><th>UNITS TYPE</th>
 </tr>
 </thead>
 <tbody></tbody>
 </table>
 
 <script>
-// ================= CONFIG =================
 const API_URL = "https://script.google.com/macros/s/1crOovIUdMuNNWGxZRivMVQ9YRIqWCH_aPeNxXCR26_EvVD7S_19AyYKT/exec";
-
 const tbody = document.querySelector("#tbl tbody");
 
-// ================= ADD ROW =================
-function addRow(data = {}) {
+// Add row
+function addRow(data={}) {
   const r = tbody.insertRow();
   const sr = tbody.rows.length;
-
   r.innerHTML = `
-    <td>${sr}</td>
-    <td>
-      <input placeholder="Drive Image ID" value="${data.image || ""}" oninput="updateImg(this)">
-      <br>
-      <a target="_blank">
-        <img src="" alt="">
-      </a>
-    </td>
-    <td><input value="${data.name || ""}"></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
-    <td><input></td>
-  `;
-
-  if (data.image) setImg(r.cells[1], data.image);
+<td>${sr}</td>
+<td><input placeholder="Drive Image ID" value="${data.image||""}" oninput="updateImg(this)">
+<br><a target="_blank"><img src="" alt=""></a></td>
+<td><input value="${data.name||""}"></td>
+<td><input></td><td><input></td><td><input></td>
+<td><input></td><td><input></td><td><input></td>`;
+  if(data.image) setImg(r.cells[1], data.image);
 }
 
-// ================= IMAGE HANDLING =================
-function updateImg(inp) {
-  setImg(inp.parentElement, inp.value);
-}
-
-function setImg(cell, id) {
-  if (!id) return;
+// Image handling
+function updateImg(inp){ setImg(inp.parentElement, inp.value); }
+function setImg(cell,id){
+  if(!id) return;
   const img = cell.querySelector("img");
   const a = cell.querySelector("a");
-
   img.src = `https://drive.google.com/uc?export=view&id=${id}`;
   a.href = `https://drive.google.com/file/d/${id}/view`;
 }
 
-// ================= LOAD IMAGES FROM DRIVE =================
-async function loadImages() {
+// Load images from Drive
+async function loadImages(){
   tbody.innerHTML = "<tr><td colspan='9'>Loading images...</td></tr>";
-
-  try {
-    const res = await fetch(API_URL + "?mode=images");
+  try{
+    const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
-
-    tbody.innerHTML = "";
-    list.forEach(f => {
-      addRow({
-        image: f.id,
-        name: f.name
-      });
-    });
-
-  } catch (e) {
-    alert("❌ Images load nahi hui. API URL check karo.");
-    console.error(e);
+    tbody.innerHTML="";
+    list.forEach(f=>addRow({image:f.id,name:f.name}));
+  }catch(e){
+    alert("❌ Images load nahi hui. API URL check karo."); console.error(e);
   }
 }
 
-// ================= SAVE ALL DATA =================
-async function saveAll() {
-  const rows = [];
-
-  [...tbody.rows].forEach((row, i) => {
-    rows.push({
-      sr: i + 1,
-      image: row.cells[1].querySelector("input").value,
-      stoneName: row.cells[2].querySelector("input").value,
-      uses: row.cells[3].querySelector("input").value,
-      usesType: row.cells[4].querySelector("input").value,
-      surfaceType: row.cells[5].querySelector("input").value,
-      thickness: row.cells[6].querySelector("input").value,
-      sizeType: row.cells[7].querySelector("input").value,
-      unitType: row.cells[8].querySelector("input").value
-    });
-  });
-
-  try {
-    await fetch(API_URL, {
-      method: "POST",
-      body: JSON.stringify({ rows })
-    });
-
+// Save all data
+async function saveAll(){
+  const rows = [...tbody.rows].map((row,i)=>({
+    sr:i+1,
+    image:row.cells[1].querySelector("input").value,
+    stoneName:row.cells[2].querySelector("input").value,
+    uses:row.cells[3].querySelector("input").value,
+    usesType:row.cells[4].querySelector("input").value,
+    surfaceType:row.cells[5].querySelector("input").value,
+    thickness:row.cells[6].querySelector("input").value,
+    sizeType:row.cells[7].querySelector("input").value,
+    unitType:row.cells[8].querySelector("input").value
+  }));
+  try{
+    await fetch(API_URL,{method:"POST", body:JSON.stringify({rows})});
     alert("✅ All data Google Sheet me save ho gaya");
-
-  } catch (e) {
-    alert("❌ Save failed. Console check karo.");
-    console.error(e);
-  }
+  }catch(e){ alert("❌ Save failed. Console check karo."); console.error(e);}
 }
 </script>
 
