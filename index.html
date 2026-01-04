@@ -7,12 +7,11 @@
 body { font-family: Arial; background:#f4f6f8; padding:20px; }
 h2 { margin-bottom:10px; }
 button { padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer; }
-table { width:100%; border-collapse: collapse; background:#fff; table-layout: fixed; }
+table { width:100%; border-collapse: collapse; background:#fff; table-layout: fixed; overflow-x:auto; display:block; }
 th, td { border:1px solid #ccc; padding:6px; text-align:center; vertical-align:middle; }
 th { background:#2c3e50; color:#fff; position:sticky; top:0; }
 input { width:100%; padding:4px; box-sizing:border-box; }
-img { width:80px; height:80px; object-fit:cover; cursor:pointer; border:1px solid #ddd; }
-td img { display:block; margin:auto; }
+td img { width:80px; height:80px; object-fit:cover; cursor:pointer; border:1px solid #ddd; display:block; margin:auto; }
 </style>
 </head>
 <body>
@@ -39,7 +38,7 @@ td img { display:block; margin:auto; }
 </table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Replace with deployed Web App URL
+const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Web App URL
 const tbody = document.querySelector("#tbl tbody");
 
 // Add a row
@@ -65,13 +64,13 @@ function addRow(data={}){
   if(data.id) setImg(r, data.id);
 }
 
-// Set image preview and click link
+// Set image thumbnail and clickable link
 function setImg(row, id){
   const img = row.querySelector("img");
   const a = row.querySelector("a");
   if(!id) return;
-  img.src = `https://drive.google.com/uc?export=view&id=${id}`;
-  a.href = `https://drive.google.com/file/d/${id}/view`;
+  img.src = `https://drive.google.com/uc?export=view&id=${id}`; // proper thumbnail preview
+  a.href = `https://drive.google.com/file/d/${id}/view`; // click to open
 }
 
 // Load images from Drive
@@ -81,9 +80,9 @@ async function loadImages(){
     const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
     tbody.innerHTML="";
-    list.forEach(f=>addRow({id:f.id, name:''})); // Name hidden
+    list.forEach(f=>addRow({id:f.id, name:''})); // name hidden
   }catch(e){
-    alert("❌ Images load nahi hui. Check Web App URL");
+    alert("❌ Images load failed. Check Web App URL & sharing settings.");
     console.error(e);
   }
 }
@@ -110,14 +109,13 @@ async function saveAll(){
       body:JSON.stringify({rows})
     });
     alert("✅ Data saved to Google Sheet!");
-    // Optional: refresh table after save
+    // Optional: reload images for updated table
     loadImages();
   }catch(e){
-    alert("❌ Save failed");
+    alert("❌ Save failed.");
     console.error(e);
   }
 }
 </script>
-
 </body>
 </html>
