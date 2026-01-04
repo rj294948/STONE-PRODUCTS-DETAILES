@@ -2,62 +2,61 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Stone Products Details</title>
+<title>Stone Products Images</title>
 <style>
 body{font-family:Arial; background:#f4f6f8; padding:20px;}
 h2{margin-bottom:10px;}
 button{padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer;}
-table{width:100%; border-collapse:collapse; background:#fff;}
-th, td{border:1px solid #ccc; padding:6px; text-align:center;}
-th{background:#2c3e50; color:#fff; position:sticky; top:0;}
-input{width:100%; border:none; padding:4px; outline:none;}
-img{width:60px; height:60px; object-fit:cover; cursor:pointer; border:1px solid #ddd;}
+#tbl{width:100%; border-collapse:collapse; display:grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
+#tbl td{border:1px solid #ccc; padding:6px; text-align:center; background:#fff;}
+img{width:100px; height:100px; object-fit:cover; cursor:pointer; border:1px solid #ddd; margin-bottom:4px;}
+input{width:100%; padding:4px; box-sizing:border-box;}
 </style>
 </head>
 <body>
 
-<h2>Stone Products Details</h2>
+<h2>Stone Products Images</h2>
 <button onclick="loadImages()">📂 Load Images From Drive</button>
 <button onclick="saveAll()">💾 Save All to Google Sheet</button>
 
-<table id="tbl">
-<thead>
-<tr>
-<th>SR</th><th>IMAGE</th><th>STONE NAME</th><th>USES</th><th>USES TYPES</th>
-<th>SURFACE TYPE</th><th>THICKNESS</th><th>SIZE TYPE</th><th>UNITS TYPE</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
+<table id="tbl"><tbody></tbody></table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; 
+const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Web App URL
 const tbody = document.querySelector("#tbl tbody");
 
-function addRow(data={}) {
-  const r = tbody.insertRow();
-  const sr = tbody.rows.length;
+// Add Image Row
+function addRow(data={}){
+  const r = document.createElement("tr");
   r.innerHTML = `
-<td>${sr}</td>
-<td><input placeholder="Drive Image ID" value="${data.id||''}" oninput="updateImg(this)">
-<br><a target="_blank"><img src="" alt=""></a></td>
-<td><input value="${data.name||''}"></td>
-<td><input></td><td><input></td><td><input></td>
-<td><input></td><td><input></td><td><input></td>`;
-  if(data.id) setImg(r.cells[1], data.id);
+<td>
+  <a target="_blank">
+    <img src="" alt="Stone Image">
+  </a>
+  <input type="hidden" value="${data.id||''}">
+  <input type="text" placeholder="Stone Name" value="${data.name||''}">
+  <input type="text" placeholder="Uses">
+  <input type="text" placeholder="Uses Type">
+  <input type="text" placeholder="Surface Type">
+  <input type="text" placeholder="Thickness">
+  <input type="text" placeholder="Size Type">
+  <input type="text" placeholder="Unit Type">
+</td>`;
+  tbody.appendChild(r);
+  if(data.id) setImg(r, data.id);
 }
 
-function updateImg(inp){ setImg(inp.parentElement, inp.value); }
-function setImg(cell,id){
-  if(!id) return;
-  const img = cell.querySelector("img");
-  const a = cell.querySelector("a");
+// Set Image Preview and link
+function setImg(row,id){
+  const img = row.querySelector("img");
+  const a = row.querySelector("a");
   img.src = `https://drive.google.com/uc?export=view&id=${id}`;
   a.href = `https://drive.google.com/file/d/${id}/view`;
 }
 
+// Load images from Drive
 async function loadImages(){
-  tbody.innerHTML = "<tr><td colspan='9'>Loading images...</td></tr>";
+  tbody.innerHTML="<tr><td>Loading images...</td></tr>";
   try{
     const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
@@ -68,23 +67,32 @@ async function loadImages(){
   }
 }
 
+// Save all to Sheet
 async function saveAll(){
-  const rows = [...tbody.rows].map((row,i)=>({
-    sr:i+1,
-    image:row.cells[1].querySelector("input").value,
-    stoneName:row.cells[2].querySelector("input").value,
-    uses:row.cells[3].querySelector("input").value,
-    usesType:row.cells[4].querySelector("input").value,
-    surfaceType:row.cells[5].querySelector("input").value,
-    thickness:row.cells[6].querySelector("input").value,
-    sizeType:row.cells[7].querySelector("input").value,
-    unitType:row.cells[8].querySelector("input").value
-  }));
+  const rows = [...tbody.querySelectorAll("tr")].map((tr,i)=>{
+    const inputs = tr.querySelectorAll("input");
+    return {
+      sr:i+1,
+      image:inputs[0].value,
+      stoneName:inputs[1].value,
+      uses:inputs[2].value,
+      usesType:inputs[3].value,
+      surfaceType:inputs[4].value,
+      thickness:inputs[5].value,
+      sizeType:inputs[6].value,
+      unitType:inputs[7].value
+    };
+  });
   try{
-    await fetch(API_URL,{method:"POST", body:JSON.stringify({rows})});
-    alert("✅ Data saved to Google Sheet");
+    await fetch(API_URL,{
+      method:"POST",
+      body:JSON.stringify({rows})
+    });
+    alert("✅ Data saved to Google Sheet and table updated!");
+    loadImages(); // Refresh table
   }catch(e){ alert("❌ Save failed"); console.error(e);}
 }
 </script>
+
 </body>
 </html>
