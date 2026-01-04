@@ -7,7 +7,7 @@
 body { font-family: Arial; background:#f4f6f8; padding:20px; }
 h2 { margin-bottom:10px; }
 button { padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer; }
-table { width:100%; border-collapse: collapse; background:#fff; }
+table { width:100%; border-collapse: collapse; background:#fff; table-layout: fixed; }
 th, td { border:1px solid #ccc; padding:6px; text-align:center; vertical-align:middle; }
 th { background:#2c3e50; color:#fff; position:sticky; top:0; }
 input { width:100%; padding:4px; box-sizing:border-box; }
@@ -39,10 +39,10 @@ td img { display:block; margin:auto; }
 </table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Web App URL
+const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Replace with deployed Web App URL
 const tbody = document.querySelector("#tbl tbody");
 
-// Add row
+// Add a row
 function addRow(data={}){
   const r = tbody.insertRow();
   const sr = tbody.rows.length;
@@ -65,10 +65,11 @@ function addRow(data={}){
   if(data.id) setImg(r, data.id);
 }
 
-// Set image
+// Set image preview and click link
 function setImg(row, id){
   const img = row.querySelector("img");
   const a = row.querySelector("a");
+  if(!id) return;
   img.src = `https://drive.google.com/uc?export=view&id=${id}`;
   a.href = `https://drive.google.com/file/d/${id}/view`;
 }
@@ -80,13 +81,14 @@ async function loadImages(){
     const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
     tbody.innerHTML="";
-    list.forEach(f=>addRow({id:f.id,name:''})); // Name hidden
+    list.forEach(f=>addRow({id:f.id, name:''})); // Name hidden
   }catch(e){
-    alert("❌ Images load nahi hui. Web App URL check karo"); console.error(e);
+    alert("❌ Images load nahi hui. Check Web App URL");
+    console.error(e);
   }
 }
 
-// Save all to Sheet
+// Save all rows to Google Sheet
 async function saveAll(){
   const rows = [...tbody.rows].map((row,i)=>{
     const inputs = row.querySelectorAll("input");
@@ -108,8 +110,14 @@ async function saveAll(){
       body:JSON.stringify({rows})
     });
     alert("✅ Data saved to Google Sheet!");
-  }catch(e){ alert("❌ Save failed"); console.error(e);}
+    // Optional: refresh table after save
+    loadImages();
+  }catch(e){
+    alert("❌ Save failed");
+    console.error(e);
+  }
 }
 </script>
+
 </body>
 </html>
