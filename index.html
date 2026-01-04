@@ -2,52 +2,71 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Stone Products Images</title>
+<title>Stone Products Table</title>
 <style>
-body{font-family:Arial; background:#f4f6f8; padding:20px;}
-h2{margin-bottom:10px;}
-button{padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer;}
-#tbl{width:100%; border-collapse:collapse; display:grid; grid-template-columns: repeat(auto-fill,minmax(120px,1fr)); gap:10px;}
-#tbl td{border:1px solid #ccc; padding:6px; text-align:center; background:#fff;}
-img{width:100px; height:100px; object-fit:cover; cursor:pointer; border:1px solid #ddd; margin-bottom:4px;}
-input{width:100%; padding:4px; box-sizing:border-box;}
+body { font-family: Arial; background:#f4f6f8; padding:20px; }
+h2 { margin-bottom:10px; }
+button { padding:8px 14px; margin:6px 6px 12px 0; cursor:pointer; }
+table { width:100%; border-collapse: collapse; background:#fff; }
+th, td { border:1px solid #ccc; padding:6px; text-align:center; vertical-align:middle; }
+th { background:#2c3e50; color:#fff; position:sticky; top:0; }
+input { width:100%; padding:4px; box-sizing:border-box; }
+img { width:80px; height:80px; object-fit:cover; cursor:pointer; border:1px solid #ddd; }
+td img { display:block; margin:auto; }
 </style>
 </head>
 <body>
 
-<h2>Stone Products Images</h2>
+<h2>Stone Products Table</h2>
 <button onclick="loadImages()">📂 Load Images From Drive</button>
 <button onclick="saveAll()">💾 Save All to Google Sheet</button>
 
-<table id="tbl"><tbody></tbody></table>
+<table id="tbl">
+<thead>
+<tr>
+<th>SR</th>
+<th>IMAGE</th>
+<th>STONE NAME</th>
+<th>USES</th>
+<th>USES TYPES</th>
+<th>SURFACE TYPE</th>
+<th>THICKNESS</th>
+<th>SIZE TYPE</th>
+<th>UNITS TYPE</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
 <script>
 const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; // Web App URL
 const tbody = document.querySelector("#tbl tbody");
 
-// Add Image Row
+// Add row
 function addRow(data={}){
-  const r = document.createElement("tr");
+  const r = tbody.insertRow();
+  const sr = tbody.rows.length;
   r.innerHTML = `
+<td>${sr}</td>
 <td>
   <a target="_blank">
     <img src="" alt="Stone Image">
   </a>
   <input type="hidden" value="${data.id||''}">
-  <input type="text" placeholder="Stone Name" value="${data.name||''}">
-  <input type="text" placeholder="Uses">
-  <input type="text" placeholder="Uses Type">
-  <input type="text" placeholder="Surface Type">
-  <input type="text" placeholder="Thickness">
-  <input type="text" placeholder="Size Type">
-  <input type="text" placeholder="Unit Type">
-</td>`;
-  tbody.appendChild(r);
+</td>
+<td><input value="${data.name||''}"></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+`;
   if(data.id) setImg(r, data.id);
 }
 
-// Set Image Preview and link
-function setImg(row,id){
+// Set image
+function setImg(row, id){
   const img = row.querySelector("img");
   const a = row.querySelector("a");
   img.src = `https://drive.google.com/uc?export=view&id=${id}`;
@@ -56,12 +75,12 @@ function setImg(row,id){
 
 // Load images from Drive
 async function loadImages(){
-  tbody.innerHTML="<tr><td>Loading images...</td></tr>";
+  tbody.innerHTML="<tr><td colspan='9'>Loading images...</td></tr>";
   try{
     const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
     tbody.innerHTML="";
-    list.forEach(f=>addRow({id:f.id,name:f.name}));
+    list.forEach(f=>addRow({id:f.id,name:''})); // Name hidden
   }catch(e){
     alert("❌ Images load nahi hui. Web App URL check karo"); console.error(e);
   }
@@ -69,8 +88,8 @@ async function loadImages(){
 
 // Save all to Sheet
 async function saveAll(){
-  const rows = [...tbody.querySelectorAll("tr")].map((tr,i)=>{
-    const inputs = tr.querySelectorAll("input");
+  const rows = [...tbody.rows].map((row,i)=>{
+    const inputs = row.querySelectorAll("input");
     return {
       sr:i+1,
       image:inputs[0].value,
@@ -88,11 +107,9 @@ async function saveAll(){
       method:"POST",
       body:JSON.stringify({rows})
     });
-    alert("✅ Data saved to Google Sheet and table updated!");
-    loadImages(); // Refresh table
+    alert("✅ Data saved to Google Sheet!");
   }catch(e){ alert("❌ Save failed"); console.error(e);}
 }
 </script>
-
 </body>
 </html>
