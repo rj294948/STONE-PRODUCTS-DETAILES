@@ -31,24 +31,22 @@ img{width:60px; height:60px; object-fit:cover; cursor:pointer; border:1px solid 
 </table>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbxxbZNLkW2k1Eqr04aApWdNGWP1ay_a7Ca2ZBt2Q9SmkXAGYCzqGLlv6AsVj2dyluA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyrie65X7KkTZ57lDvoMcP_OCDqup4S0DDQ4vdrigbsRdRUZw-hEunhx6lpS-h5vCI/exec"; 
 const tbody = document.querySelector("#tbl tbody");
 
-// Add row
 function addRow(data={}) {
   const r = tbody.insertRow();
   const sr = tbody.rows.length;
   r.innerHTML = `
 <td>${sr}</td>
-<td><input placeholder="Drive Image ID" value="${data.image||""}" oninput="updateImg(this)">
+<td><input placeholder="Drive Image ID" value="${data.id||''}" oninput="updateImg(this)">
 <br><a target="_blank"><img src="" alt=""></a></td>
-<td><input value="${data.name||""}"></td>
+<td><input value="${data.name||''}"></td>
 <td><input></td><td><input></td><td><input></td>
 <td><input></td><td><input></td><td><input></td>`;
-  if(data.image) setImg(r.cells[1], data.image);
+  if(data.id) setImg(r.cells[1], data.id);
 }
 
-// Image handling
 function updateImg(inp){ setImg(inp.parentElement, inp.value); }
 function setImg(cell,id){
   if(!id) return;
@@ -58,20 +56,18 @@ function setImg(cell,id){
   a.href = `https://drive.google.com/file/d/${id}/view`;
 }
 
-// Load images from Drive
 async function loadImages(){
   tbody.innerHTML = "<tr><td colspan='9'>Loading images...</td></tr>";
   try{
     const res = await fetch(API_URL+"?mode=images");
     const list = await res.json();
     tbody.innerHTML="";
-    list.forEach(f=>addRow({image:f.id,name:f.name}));
+    list.forEach(f=>addRow({id:f.id,name:f.name}));
   }catch(e){
-    alert("❌ Images load nahi hui. API URL check karo."); console.error(e);
+    alert("❌ Images load nahi hui. Web App URL check karo"); console.error(e);
   }
 }
 
-// Save all data
 async function saveAll(){
   const rows = [...tbody.rows].map((row,i)=>({
     sr:i+1,
@@ -86,10 +82,9 @@ async function saveAll(){
   }));
   try{
     await fetch(API_URL,{method:"POST", body:JSON.stringify({rows})});
-    alert("✅ All data Google Sheet me save ho gaya");
-  }catch(e){ alert("❌ Save failed. Console check karo."); console.error(e);}
+    alert("✅ Data saved to Google Sheet");
+  }catch(e){ alert("❌ Save failed"); console.error(e);}
 }
 </script>
-
 </body>
 </html>
