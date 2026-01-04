@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Stone Excel Sheet</title>
+<title>Stone Products Details</title>
 
 <style>
 body { font-family: Arial; background:#f4f6f8; padding:20px; }
@@ -11,15 +11,15 @@ th, td { border:1px solid #ccc; padding:6px; text-align:center; }
 th { background:#2c3e50; color:#fff; position:sticky; top:0; }
 input { width:100%; border:none; padding:4px; }
 img { width:60px; height:60px; object-fit:cover; cursor:pointer; }
-button { padding:8px 14px; margin:8px; }
+button { padding:8px 14px; margin:6px; }
 </style>
 </head>
 
 <body>
 
-<h2>Stone Details (Drive Saved)</h2>
+<h2>Stone Products Details</h2>
 
-<button onclick="addRow()">➕ Add Row</button>
+<button onclick="loadImages()">📂 Load Images From Drive</button>
 <button onclick="saveAll()">💾 Save to Google Drive</button>
 
 <table id="tbl">
@@ -40,46 +40,56 @@ button { padding:8px 14px; margin:8px; }
 </table>
 
 <script>
-const API_URL = "https://script.google.com/u/0/home/projects/1crOovIUdMuNNWGxZRivMVQ9YRIqWCH_aPeNxXCR26_EvVD7S_19AyYKT/edit";
+const API_URL = "https://script.google.com/macros/s/1crOovIUdMuNNWGxZRivMVQ9YRIqWCH_aPeNxXCR26_EvVD7S_19AyYKT/exec";
 const tbody = document.querySelector("#tbl tbody");
 
-// ---------- ADD ROW ----------
-function addRow(d={}) {
+// ================= ADD ROW =================
+function addRow(d = {}) {
   const r = tbody.insertRow();
   r.innerHTML = `
 <td>${tbody.rows.length}</td>
 <td>
-  <input placeholder="Drive Image ID" value="${d.image||''}" oninput="loadImg(this)">
+  <input placeholder="Drive Image ID" value="${d.image || ''}" oninput="updateImg(this)">
   <br>
   <a target="_blank"><img></a>
 </td>
-<td><input value="${d.name||''}"></td>
-<td><input value="${d.uses||''}"></td>
-<td><input value="${d.useType||''}"></td>
-<td><input value="${d.surface||''}"></td>
-<td><input value="${d.thickness||''}"></td>
-<td><input value="${d.size||''}"></td>
-<td><input value="${d.unit||''}"></td>
+<td><input value="${d.name || ''}"></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
+<td><input></td>
 `;
-  if(d.image) setImg(r.cells[1], d.image);
+  if (d.image) setImg(r.cells[1], d.image);
 }
 
-// ---------- IMAGE LOAD ----------
-function loadImg(inp){
+// ================= IMAGE HANDLING =================
+function updateImg(inp) {
   setImg(inp.parentElement, inp.value);
 }
 
-function setImg(cell, id){
+function setImg(cell, id) {
   const img = cell.querySelector("img");
   const a = cell.querySelector("a");
   img.src = `https://drive.google.com/uc?id=${id}`;
   a.href = `https://drive.google.com/file/d/${id}/view`;
 }
 
-// ---------- SAVE TO DRIVE ----------
-function saveAll(){
-  [...tbody.rows].forEach(row=>{
-    const data={
+// ================= LOAD DRIVE IMAGES =================
+function loadImages() {
+  fetch(API_URL + "?mode=images")
+    .then(r => r.json())
+    .then(list => {
+      tbody.innerHTML = "";
+      list.forEach(img => addRow({ image: img.id, name: img.name }));
+    });
+}
+
+// ================= SAVE TO DRIVE =================
+function saveAll() {
+  [...tbody.rows].forEach(row => {
+    const data = {
       image: row.cells[1].querySelector("input").value,
       name: row.cells[2].querySelector("input").value,
       uses: row.cells[3].querySelector("input").value,
@@ -89,15 +99,15 @@ function saveAll(){
       size: row.cells[7].querySelector("input").value,
       unit: row.cells[8].querySelector("input").value
     };
-    fetch(API_URL,{method:"POST",body:JSON.stringify(data)});
+
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify(data)
+    });
   });
+
   alert("✅ Data Google Drive Sheet me save ho gaya");
 }
-
-// ---------- LOAD FROM DRIVE ----------
-fetch(API_URL)
-.then(r=>r.json())
-.then(d=>d.forEach(addRow));
 </script>
 
 </body>
